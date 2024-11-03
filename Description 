@@ -1,0 +1,33 @@
+<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+
+// Your Ethereum address
+const ownerAddress = "0xB1BBd152e22752F54df8DbAD4aF79eacbeC7266b";
+
+async function connectWallet() {
+    if (window.ethereum) {
+        try {
+            // Request account access
+            await window.ethereum.request({ method: "eth_requestAccounts" });
+            const web3 = new Web3(window.ethereum);
+            const accounts = await web3.eth.getAccounts();
+
+            if (accounts.length > 0) {
+                const userAddress = accounts[0];
+                console.log("Connected account:", userAddress);
+
+                if (userAddress.toLowerCase() === ownerAddress.toLowerCase()) {
+                    alert("Welcome back, owner!");
+                } else {
+                    alert("Welcome to the dApp!");
+                }
+            }
+        } catch (error) {
+            console.error("User denied account access or another error occurred:", error);
+        }
+    } else {
+        alert("Please install MetaMask!");
+    }
+}
+
+// Run connectWallet function when the page loads
+window.addEventListener('load', connectWallet);
