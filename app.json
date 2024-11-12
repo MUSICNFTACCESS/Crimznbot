@@ -1,4 +1,5 @@
-{
+npm install
+npm test{
      "name": "basedagents",
      "version": "1.0.0",
      "description": "Based Agents project",
