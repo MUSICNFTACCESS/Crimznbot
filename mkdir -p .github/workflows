@@ -1,1 +1,2 @@
 mkdir -p .github/workflows
+touch .github/workflows/deployment.yml
