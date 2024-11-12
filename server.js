@@ -1,52 +1,39 @@
 const express = require('express');
-const cors = require('cors');
 const bodyParser = require('body-parser');
-const OpenAI = require('openai');
-require('dotenv').config();
+const cors = require('cors');
+const dotenv = require('dotenv');
+const { Configuration, OpenAIApi } = require('openai');
 
-const PORT = process.env.PORT || 3000;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+dotenv.config();
 
 const app = express();
-app.use(cors({
-  origin: 'https://musicnftaccess.github.io',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
-}));
+const port = process.env.PORT || 3000;
+
+app.use(cors());
 app.use(bodyParser.json());
 
-const openai = new OpenAI({
-  apiKey: OPENAI_API_KEY,
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
 });
+const openai = new OpenAIApi(configuration);
 
-// Health check endpoint
-app.get('/', (req, res) => {
-  res.send('CrimznBot Server is Running!');
-});
-
-// Chat endpoint
 app.post('/api/chat', async (req, res) => {
-  const { message } = req.body;
-
-  if (!message) {
-    return res.status(400).json({ error: 'Message is required!' });
-  }
-
   try {
-    const response = await openai.chat.completions.create({
+    const userMessage = req.body.message;
+
+    const completion = await openai.createChatCompletion({
       model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: message }],
+      messages: [{ role: 'user', content: userMessage }],
     });
 
-    const botMessage = response.choices[0].message.content;
-    res.json({ reply: botMessage });
+    const botReply = completion.data.choices[0].message.content;
+    res.json({ reply: botReply });
   } catch (error) {
-    console.error('Error communicating with OpenAI:', error.message);
-    console.error(error.response?.data || error);
-    res.status(500).json({ error: 'Failed to get response from OpenAI.' });
+    console.error('OpenAI API error:', error);
+    res.status(500).json({ reply: 'Sorry, something went wrong.' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`CrimznBot Server is running on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
