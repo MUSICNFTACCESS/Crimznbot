@@ -13,5 +13,4 @@ From the minds of BeyondBordersConsulting comes BeyondBased, a crypto consulting
 
 1. Clone the repository:
    ```sh
-   git clone https://github.com/MUSICNFTACCESS/BasedAgents.git
-   cd BasedAgents
+   git clone https://github.com/MUSICNFTACCESS/BasedAgents.git BasedAgentsNew
