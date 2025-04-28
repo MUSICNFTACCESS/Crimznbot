@@ -8,18 +8,22 @@ const PORT = process.env.PORT || 3000;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 const app = express();
+
+// Correct CORS setup
 app.use(cors({
-  origin: '*',
+  origin: 'https://musicnftaccess.github.io',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
+  credentials: true
 }));
+
 app.use(bodyParser.json());
 
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
 });
 
-// Health check endpoint
+// Health check
 app.get('/', (req, res) => {
   res.send('CrimznBot Server is Running!');
 });
@@ -42,12 +46,10 @@ app.post('/api/chat', async (req, res) => {
     res.json({ reply: botMessage });
   } catch (error) {
     console.error('Error communicating with OpenAI:', error.message);
-    console.error(error.response?.data || error);
-    res.status(500).json({ error: 'Failed to get response from OpenAI.' });
+    res.status(500).json({ error: 'Failed to get response from CrimznBot.' });
   }
 });
 
-// Start the server
 app.listen(PORT, () => {
   console.log(`CrimznBot Server is running on port ${PORT}`);
 });
