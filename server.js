@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const { Configuration, OpenAIApi } = require('openai');
+const OpenAI = require('openai');
 require('dotenv').config();
 
 const PORT = process.env.PORT || 3000;
@@ -11,11 +11,9 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const openai = new OpenAIApi(
-  new Configuration({
-    apiKey: OPENAI_API_KEY,
-  })
-);
+const openai = new OpenAI({
+  apiKey: OPENAI_API_KEY,
+});
 
 // Health check endpoint
 app.get('/', (req, res) => {
@@ -31,12 +29,12 @@ app.post('/api/chat', async (req, res) => {
   }
 
   try {
-    const response = await openai.createChatCompletion({
+    const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: message }],
     });
 
-    const botMessage = response.data.choices[0].message.content;
+    const botMessage = response.choices[0].message.content;
     res.json({ reply: botMessage });
   } catch (error) {
     console.error('Error communicating with OpenAI:', error.message);
