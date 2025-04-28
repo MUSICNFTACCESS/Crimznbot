@@ -1,25 +1,21 @@
-// Load environment variables
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const { Configuration, OpenAIApi } = require('openai');
 require('dotenv').config();
 
-// Import required libraries
-const express = require('express');
-const OpenAI = require('openai');
+const PORT = process.env.PORT || 3000;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 const app = express();
-const port = process.env.PORT || 3000;
+app.use(cors());
+app.use(bodyParser.json());
 
-app.use(express.json());
-
-// Check if API key is missing
-if (!process.env.OPENAI_API_KEY) {
-  console.error('❌ OPENAI_API_KEY is missing in environment variables!');
-  process.exit(1); // Exit the app
-}
-
-// OpenAI configuration
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const openai = new OpenAIApi(
+  new Configuration({
+    apiKey: OPENAI_API_KEY,
+  })
+);
 
 // Health check endpoint
 app.get('/', (req, res) => {
@@ -35,12 +31,12 @@ app.post('/api/chat', async (req, res) => {
   }
 
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo', // or 'gpt-4' if available
+    const response = await openai.createChatCompletion({
+      model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: message }],
     });
 
-    const botMessage = response.choices[0].message.content;
+    const botMessage = response.data.choices[0].message.content;
     res.json({ reply: botMessage });
   } catch (error) {
     console.error('Error communicating with OpenAI:', error.message);
@@ -49,7 +45,6 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`CrimznBot Server is running on port ${port}`);
+app.listen(PORT, () => {
+  console.log(`CrimznBot Server is running on port ${PORT}`);
 });
