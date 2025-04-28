@@ -11,6 +11,7 @@ document.getElementById("chat-form").addEventListener("submit", async (e) => {
   try {
     const res = await fetch(API_URL, {
       method: "POST",
+      mode: "cors",
       headers: {
         "Content-Type": "application/json",
       },
