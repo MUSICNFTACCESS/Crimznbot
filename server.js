@@ -15,11 +15,9 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
 
 // Serve main HTML page
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // CrimznBot route
