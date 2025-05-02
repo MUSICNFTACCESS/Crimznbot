@@ -1,0 +1,36 @@
+0 verbose cli /data/data/com.termux/files/usr/bin/node /data/data/com.termux/files/usr/bin/npm
+1 info using npm@10.9.2
+2 info using node@v23.11.0
+3 silly config load:file:/data/data/com.termux/files/usr/lib/node_modules/npm/npmrc
+4 silly config load:file:/data/data/com.termux/files/home/.npmrc
+5 silly config load:file:/data/data/com.termux/files/usr/etc/npmrc
+6 verbose title npm install cors
+7 verbose argv "install" "cors"
+8 verbose logfile logs-max:10 dir:/data/data/com.termux/files/home/.npm/_logs/2025-05-02T17_25_16_655Z-
+9 verbose logfile /data/data/com.termux/files/home/.npm/_logs/2025-05-02T17_25_16_655Z-debug-0.log
+10 silly logfile done cleaning log files
+11 silly packumentCache heap:964689920 maxSize:241172480 maxEntrySize:120586240
+12 verbose stack JSONParseError: Expected property name or '}' in JSON at position 2 (line 2 column 1) while parsing near "{\n<<<<<<< HEAD\n  \"name..."
+12 verbose stack     at /data/data/com.termux/files/usr/lib/node_modules/npm/node_modules/read-package-json-fast/lib/index.js:7:61
+12 verbose stack     at async #initTree (/data/data/com.termux/files/usr/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:268:21)
+12 verbose stack     at async Arborist.buildIdealTree (/data/data/com.termux/files/usr/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:178:7)
+12 verbose stack     at async Promise.all (index 1)
+12 verbose stack     at async Arborist.reify (/data/data/com.termux/files/usr/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:131:5)
+12 verbose stack     at async Install.exec (/data/data/com.termux/files/usr/lib/node_modules/npm/lib/commands/install.js:162:5)
+12 verbose stack     at async Npm.exec (/data/data/com.termux/files/usr/lib/node_modules/npm/lib/npm.js:207:9)
+12 verbose stack     at async module.exports (/data/data/com.termux/files/usr/lib/node_modules/npm/lib/cli/entry.js:67:5)
+13 error code EJSONPARSE
+14 error path /data/data/com.termux/files/home/package.json
+15 error Merge conflict detected in your package.json.
+15 error
+15 error Please resolve the package.json conflict and retry.
+16 silly unfinished npm timer reify 1746206719081
+17 silly unfinished npm timer reify:loadTrees 1746206719084
+18 silly unfinished npm timer idealTree:init 1746206719087
+19 verbose cwd /data/data/com.termux/files/home/CryptoConsult
+20 verbose os Linux 5.15.148-android13-8-29832239
+21 verbose node v23.11.0
+22 verbose npm  v10.9.2
+23 verbose exit 1
+24 verbose code 1
+25 error A complete log of this run can be found in: /data/data/com.termux/files/home/.npm/_logs/2025-05-02T17_25_16_655Z-debug-0.log
