@@ -42,6 +42,6 @@ app.post('/api/chat', async (req, res) => {
 });
 
 // Start the server and bind to 0.0.0.0
-app.listen(port, '0.0.0.0', () => {
+app.listen(port, () => {
   console.log(`Server is running at http://0.0.0.0:${port}`);
 });
