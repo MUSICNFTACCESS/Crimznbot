@@ -10,17 +10,15 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// Serve static files
-
-// Serve main HTML page
-app.get('/', (req, res) => {
+// Optional ping route for uptime monitoring
+app.get('/ping', (req, res) => {
+  res.send('CrimznBot is alive');
 });
 
-// CrimznBot route
+// Main chat endpoint
 app.post('/api/chat', async (req, res) => {
   try {
     const userMessage = req.body.message;
@@ -37,12 +35,13 @@ app.post('/api/chat', async (req, res) => {
 
     res.json({ response: completion.data.choices[0].message.content });
   } catch (error) {
-    console.error('Error in /api/chat:', error.message);
+    console.error('Error in /api/chat:');
+    console.error(error.response?.data || error.message);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
 
-// Start server
-app.listen(port, "0.0.0.0", () => { console.log(`Server is running at http://0.0.0.0:${port}`); });
-  console.log(`Server is running at http://localhost:${port}`);
+// Start the server and bind to 0.0.0.0
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server is running at http://0.0.0.0:${port}`);
 });
