@@ -11,71 +11,74 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 app.use(cors());
 app.use(bodyParser.json());
 
-const symbolToId = {
-  btc: 'bitcoin',
-  eth: 'ethereum',
-  sol: 'solana',
-  link: 'chainlink',
-  pepe: 'pepe',
-  xrp: 'ripple',
-  dot: 'polkadot',
-  ada: 'cardano'
-};
+// Load full coin list from CoinGecko
+let coinList = [];
 
-// Clean + normalize user input
-function extractCoinQuery(message) {
-  const cleaned = message.toLowerCase().replace(/\b(today|now|currently|the)\b/g, '').trim();
-  const keywordMatch = /(price|market.?cap)/.test(cleaned);
-  if (!keywordMatch) return null;
-
-  const parts = cleaned.split(/\s+/);
-  const possibleCoin = parts.find(word => symbolToId[word] || /^[a-z]+$/.test(word));
-  return symbolToId[possibleCoin] || possibleCoin;
+async function loadCoinList() {
+  try {
+    const res = await axios.get('https://api.coingecko.com/api/v3/coins/list');
+    coinList = res.data;
+    console.log(`Loaded ${coinList.length} coins from CoinGecko`);
+  } catch (err) {
+    console.error('CoinGecko list load failed:', err.message);
+  }
 }
 
-// Root route
-app.get('/', (req, res) => {
-  res.send('CrimznBot: GPT + CoinGecko Live');
-});
+loadCoinList();
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'Live' });
-});
+// Detect coin symbol or name in message
+function extractCoinQuery(msg) {
+  const cleaned = msg.toLowerCase().replace(/\b(today|now|currently|the|chart|price|marketcap|market cap|value)\b/g, '').trim();
+  const words = cleaned.split(/\s+/);
+  for (const word of words) {
+    const match = coinList.find(c =>
+      c.symbol === word || c.id === word || c.name.toLowerCase() === word
+    );
+    if (match) return match;
+  }
+  return null;
+}
 
-// Chat route
+// Endpoints
+app.get('/', (req, res) => res.send('CrimznBot v3: GPT + Live Crypto + TradingView Charts'));
+app.get('/health', (req, res) => res.json({ status: 'Online with live charts & GPT' }));
+
 app.post('/api/chat', async (req, res) => {
   const userMessage = req.body.message;
-  const coinId = extractCoinQuery(userMessage);
+  const coinData = extractCoinQuery(userMessage);
 
-  if (coinId) {
+  if (coinData) {
     try {
-      const cgResp = await axios.get(`https://api.coingecko.com/api/v3/coins/${coinId}`);
-      const price = cgResp.data.market_data.current_price.usd;
-      const marketCap = cgResp.data.market_data.market_cap.usd;
+      const cg = await axios.get(`https://api.coingecko.com/api/v3/coins/${coinData.id}`);
+      const price = cg.data.market_data.current_price.usd;
+      const marketCap = cg.data.market_data.market_cap.usd;
+
+      const symbol = coinData.symbol.toUpperCase();
+      const tradingViewLink = `https://www.tradingview.com/symbols/${symbol}USD`;
+
       return res.json({
-        reply: `Live data for **${cgResp.data.name}**:\n- Price: $${price.toLocaleString()}\n- Market Cap: $${marketCap.toLocaleString()}`
+        reply: `Live data for **${cg.data.name} (${symbol})**:\n- Price: $${price.toLocaleString()}\n- Market Cap: $${marketCap.toLocaleString()}\n- [View Chart on TradingView](${tradingViewLink})`
       });
     } catch {
-      return res.json({ reply: `Couldn't get live data for "${coinId}". Try a different coin.` });
+      return res.json({ reply: `Couldn't fetch data for "${coinData.id}". Try again.` });
     }
   }
 
   // Fallback to GPT
   try {
-    const gptResp = await openai.chat.completions.create({
+    const gpt = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: 'You are CrimznBot, a helpful crypto advisor.' },
+        { role: 'system', content: 'You are CrimznBot, a crypto consultant and advisor.' },
         { role: 'user', content: userMessage }
       ],
-      max_tokens: 200,
+      max_tokens: 200
     });
 
-    const botReply = gptResp.choices[0].message.content.trim();
-    res.json({ reply: botReply });
+    const reply = gpt.choices[0].message.content.trim();
+    res.json({ reply });
   } catch (error) {
-    console.error('GPT Error:', error.response?.data || error.message);
+    console.error('GPT error:', error.response?.data || error.message);
     res.status(500).json({ reply: 'CrimznBot failed to respond.' });
   }
 });
