@@ -29,7 +29,8 @@ app.post('/api/chat', async (req, res) => {
   }
 
   // Check for price or marketcap questions
-  const match = userMessage.match(/(?:price|market.?cap) of ([a-z0-9\s]+)/i);
+  const cleanedMessage = userMessage.replace(/\b(today|now|currently)\b/g, "").trim();
+  const match = cleanedMessage.match(/(?:price|market.?cap) of ([a-z0-9\s]+)/i);
   if (match) {
     const coinName = match[1].trim().toLowerCase().replace(/\s+/g, '-');
     try {
