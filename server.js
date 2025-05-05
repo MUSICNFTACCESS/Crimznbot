@@ -2,7 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const OpenAI = require('openai');
 const cors = require('cors');
-require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -11,14 +10,17 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 app.use(cors());
 app.use(bodyParser.json());
 
+// Root check
 app.get('/', (req, res) => {
   res.send('CrimznBot backend is running.');
 });
 
+// Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'Server is running' });
 });
 
+// Chat endpoint
 app.post('/api/chat', async (req, res) => {
   const userMessage = req.body.message;
   if (!userMessage) {
@@ -39,7 +41,7 @@ app.post('/api/chat', async (req, res) => {
     res.json({ reply: botReply });
   } catch (error) {
     console.error('OpenAI Error:', error.response?.data || error.message);
-    res.status(500).json({ reply: 'CrimznBot failed to respond. Check API key or server logs.' });
+    res.status(500).json({ reply: 'CrimznBot failed to respond. Check API key or logs.' });
   }
 });
 
