@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "Crimznbot web service",
   "main": "server.js",
+  "engines": {
+
+    "node": ">=20.11.0"
+
+  },
   "scripts": {
     "start": "node server.js"
   },
