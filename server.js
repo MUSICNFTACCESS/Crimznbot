@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const axios = require("axios");
 const OpenAI = require("openai");
 
 dotenv.config();
@@ -15,8 +16,39 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
+// Helper function to get live crypto prices
+async function getCryptoPrice(coin) {
+  const idMap = {
+    btc: "bitcoin",
+    eth: "ethereum",
+    sol: "solana"
+  };
+
+  const coinId = idMap[coin.toLowerCase()] || coin.toLowerCase();
+  const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`;
+
+  try {
+    const response = await axios.get(url);
+    const price = response.data[coinId]?.usd;
+    if (price) {
+      return `The current price of ${coin.toUpperCase()} is $${price.toLocaleString()}.`;
+    }
+  } catch (err) {
+    console.error("CoinGecko API error:", err.message);
+  }
+  return null;
+}
+
 app.post("/api/chat", async (req, res) => {
   const userMessage = req.body.message;
+
+  // Check for known crypto price queries
+  const coinMatch = userMessage.toLowerCase().match(/\b(btc|bitcoin|eth|ethereum|sol|solana)\b/);
+  if (coinMatch) {
+    const coin = coinMatch[1];
+    const price = await getCryptoPrice(coin);
+    if (price) return res.json({ reply: price });
+  }
 
   try {
     const completion = await openai.chat.completions.create({
