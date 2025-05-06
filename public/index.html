@@ -2,68 +2,35 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Crimzn Crypto Consult</title>
-  <style>
-    body {
-      background-color: #0d0d0d;
-      color: #f2f2f2;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
-    .card {
-      background: #1a1a1a;
-      margin: 20px auto;
-      padding: 20px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 500px;
-      box-shadow: 0px 0px 10px #ff9900;
-    }
-    input[type="text"] {
-      width: 80%;
-      padding: 12px;
-      margin-top: 15px;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
-    }
-    button {
-      margin-top: 10px;
-      background-color: #ff9900;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #cc7a00;
-    }
-    #chat-response {
-      margin-top: 20px;
-      background-color: #222;
-      padding: 20px;
-      border-radius: 10px;
-      min-height: 50px;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CryptoConsult by Crimzn</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <h1>CryptoConsult by Crimzn</h1>
 
-  <h1>Crimzn Crypto Consult</h1>
+  <div id="prices">Loading live prices...</div>
 
-  <div class="card">
-    <h2>Ask CrimznBot</h2>
-    <form id="chat-form">
-      <input type="text" id="user-input" placeholder="Ask a crypto question...">
-      <br>
-      <button type="submit">Send</button>
-    </form>
-    <div id="chat-response">CrimznBot will answer here...</div>
+  <ul class="services">
+    <li>Onboarding & Crypto Basics</li>
+    <li>Wallet Setup & Security</li>
+    <li>Technical & Fundamental Analysis</li>
+    <li>Crypto Tax Guidance</li>
+    <li>Risk Management & Strategy</li>
+  </ul>
+
+  <div class="buttons">
+    <a href="https://commerce.coinbase.com/checkout/0193a8a5-c86f-407d-b5d7-6f89664fbdf8" target="_blank">Book via Coinbase</a>
+    <a href="https://paypal.me/crimzn" target="_blank">Pay with PayPal</a>
   </div>
 
-  <script src="script.js"></script>
+  <div id="chatbox"></div>
+  <form id="chat-form">
+    <input type="text" placeholder="Ask CrimznBot about crypto..." required>
+    <button type="submit">Send</button>
+  </form>
 
+  <audio id="background-beat" src="philly2scranton.mp3"></audio>
+  <script src="script.js"></script>
 </body>
 </html>

@@ -1,28 +1,52 @@
-const API_URL = "https://crimznbot.onrender.com/api/chat";
+// Fetch live prices on page load
+document.addEventListener('DOMContentLoaded', async () => {
+  const priceDiv = document.querySelector('#prices');
+  try {
+    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd');
+    const data = await response.json();
+    priceDiv.innerHTML = `
+      Bitcoin: $${data.bitcoin.usd} | 
+      Ethereum: $${data.ethereum.usd} | 
+      Solana: $${data.solana.usd}
+    `;
+  } catch (err) {
+    priceDiv.innerHTML = 'Error loading prices';
+  }
+});
 
-document.getElementById("chat-form").addEventListener("submit", async (e) => {
+// Play beat on first click
+let isFirstClick = true;
+document.addEventListener('click', () => {
+  if (isFirstClick) {
+    const audio = document.querySelector('#background-beat');
+    audio.play().catch(err => console.error('Audio play error:', err));
+    isFirstClick = false;
+  }
+});
+
+// Chat form submission
+document.querySelector('#chat-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const userInput = document.getElementById("user-input").value.trim();
-  const chatResponse = document.getElementById("chat-response");
+  const input = document.querySelector('#chat-form input');
+  const userMessage = input.value.trim();
+  if (!userMessage) return;
 
-  if (!userInput) return;
-
-  chatResponse.innerText = "Thinking...";
+  const chatBox = document.querySelector('#chatbox');
+  chatBox.innerHTML += `> You: ${userMessage}<br>`;
 
   try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      mode: "cors",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ message: userInput })
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: userMessage })
     });
 
     const data = await response.json();
-    chatResponse.innerText = data.reply || "No reply.";
-  } catch (error) {
-    console.error(error);
-    chatResponse.innerText = "Error: Could not reach CrimznBot.";
+    chatBox.innerHTML += `> CrimznBot: ${data.reply}<br>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+  } catch (err) {
+    chatBox.innerHTML += `> CrimznBot: Error reaching server.<br>`;
   }
+
+  input.value = '';
 });

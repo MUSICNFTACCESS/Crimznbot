@@ -2,49 +2,56 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const axios = require('axios');
-const OpenAI = require('openai');
+const { Configuration, OpenAIApi } = require('openai');
 
 const app = express();
-const port = process.env.PORT || 3000;
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Middleware
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.static('public'));
 
-app.post("/api/chat", async (req, res) => {
+// OpenAI setup
+const openai = new OpenAIApi(new Configuration({
+  apiKey: process.env.OPENAI_API_KEY
+}));
+
+// Root route to fix "Cannot GET /"
+app.get('/', (req, res) => {
+  res.sendFile('index.html', { root: 'public' });
+});
+
+// Health check
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+// Chat endpoint with OpenAI
+app.post('/api/chat', async (req, res) => {
   try {
-    const message = req.body.message.toLowerCase();
-
-    const match = message.match(/price.*?(bitcoin|btc|ethereum|eth|solana|sol|xrp|doge|pepe|link|avax|dot|ada|shib|ton|apt|near|atom)/);
-    if (match) {
-      const symbol = match[1].toLowerCase();
-      const map = {
-        btc: "bitcoin", eth: "ethereum", sol: "solana", xrp: "ripple",
-        doge: "dogecoin", pepe: "pepe", link: "chainlink", avax: "avalanche-2",
-        dot: "polkadot", ada: "cardano", shib: "shiba-inu", ton: "the-open-network",
-        apt: "aptos", near: "near", atom: "cosmos"
-      };
-      const id = map[symbol] || symbol;
-      const response = await axios.get(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`);
-      const price = response.data[id]?.usd;
-      if (price) return res.json({ reply: `The current price of ${id.replace(/-/g, ' ')} is $${price}` });
+    const message = req.body.message?.trim();
+    if (!message) {
+      return res.json({ reply: 'Please send a message' });
     }
 
-    const chatResponse = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: req.body.message }]
+    const response = await openai.createChatCompletion({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { 
+          role: 'system', 
+          content: 'You are CrimznBot, a crypto consulting assistant for CryptoConsult by Crimzn. Provide accurate, concise answers about cryptocurrencies, wallet setup and security, technical and fundamental analysis, crypto tax guidance, onboarding, risk management, and related topics. If unsure or if the question requires personalized advice, suggest booking a consultation via Coinbase or PayPal links. Keep responses professional and under 150 words.' 
+        },
+        { role: 'user', content: message }
+      ],
+      max_tokens: 150
     });
 
-    const botReply = chatResponse.choices[0].message.content.trim();
-    res.json({ reply: botReply });
-
-  } catch (error) {
-    console.error("Error in /api/chat:", error.response?.data || error.message);
-    res.status(500).json({ reply: "Sorry, something went wrong." });
+    const reply = response.data.choices[0].message.content.trim();
+    return res.json({ reply });
+  } catch (err) {
+    console.error(err);
+    return res.json({ reply: 'Error reaching OpenAI. Please try again later.' });
   }
 });
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Server is running at http://0.0.0.0:${port}`);
-});
+// Start server
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`Server running on port ${port}`));
