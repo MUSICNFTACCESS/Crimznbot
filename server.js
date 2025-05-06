@@ -1,57 +1,58 @@
-require('dotenv').config();
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const { Configuration, OpenAIApi } = require('openai');
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const OpenAI = require("openai");
 
+dotenv.config();
 const app = express();
+const port = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public'));
 
-// OpenAI setup
-const openai = new OpenAIApi(new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
-}));
-
-// Root route to fix "Cannot GET /"
-app.get('/', (req, res) => {
-  res.sendFile('index.html', { root: 'public' });
 });
 
-// Health check
-app.get('/health', (req, res) => res.json({ status: 'ok' }));
+app.post("/api/chat", async (req, res) => {
+  const userMessage = req.body.message;
 
-// Chat endpoint with OpenAI
-app.post('/api/chat', async (req, res) => {
   try {
-    const message = req.body.message?.trim();
-    if (!message) {
-      return res.json({ reply: 'Please send a message' });
-    }
-
-    const response = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo',
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
       messages: [
-        { 
-          role: 'system', 
-          content: 'You are CrimznBot, a crypto consulting assistant for CryptoConsult by Crimzn. Provide accurate, concise answers about cryptocurrencies, wallet setup and security, technical and fundamental analysis, crypto tax guidance, onboarding, risk management, and related topics. If unsure or if the question requires personalized advice, suggest booking a consultation via Coinbase or PayPal links. Keep responses professional and under 150 words.' 
+        {
+          role: "system",
+          content: `You are CrimznBot — an AI crypto and finance consultant created by Crimzn.
+
+Your top priorities:
+- Help users with crypto investing, technical/fundamental analysis, wallet setup, and risk management.
+- Use a confident but clear tone: give direct, actionable answers — no fluff.
+- If asked about live market data (e.g. BTC price), answer only if a real-time source is available, otherwise say you don’t have that data right now.
+- If the user says “act like Crimzn,” be bold, no-nonsense, and deliver your insights like a pro trader.
+- If unsure of something, say “I don’t have that data right now,” rather than guessing.
+- For all other questions (history, AI, tech, philosophy, etc.), answer concisely and accurately.
+
+Your goal is to be the ultimate crypto sidekick, offering elite insights and clarity on demand.
+
+Always end responses with a follow-up question *only if it adds value*.`
         },
-        { role: 'user', content: message }
-      ],
-      max_tokens: 150
+        {
+          role: "user",
+          content: userMessage
+        }
+      ]
     });
 
-    const reply = response.data.choices[0].message.content.trim();
-    return res.json({ reply });
-  } catch (err) {
-    console.error(err);
-    return res.json({ reply: 'Error reaching OpenAI. Please try again later.' });
+    const reply = completion.choices[0].message.content;
+    res.json({ reply });
+  } catch (error) {
+    console.error("Error in /api/chat:", error);
+    res.status(500).json({ error: "Something went wrong" });
   }
 });
 
-// Start server
-const port = process.env.PORT || 3000;
-app.listen(port, () => console.log(`Server running on port ${port}`));
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Server is running at http://0.0.0.0:${port}`);
+});
