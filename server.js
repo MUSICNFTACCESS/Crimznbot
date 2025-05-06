@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const axios = require("axios");
 const OpenAI = require("openai");
 
 dotenv.config();
@@ -15,8 +16,28 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
+async function fetchCryptoPrices() {
+  try {
+    const res = await axios.get(
+      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd"
+    );
+    return {
+      BTC: `$${res.data.bitcoin.usd.toLocaleString()}`,
+      ETH: `$${res.data.ethereum.usd.toLocaleString()}`,
+      SOL: `$${res.data.solana.usd.toLocaleString()}`
+    };
+  } catch (err) {
+    return {
+      BTC: "unavailable",
+      ETH: "unavailable",
+      SOL: "unavailable"
+    };
+  }
+}
+
 app.post("/api/chat", async (req, res) => {
   const userMessage = req.body.message;
+  const prices = await fetchCryptoPrices();
 
   try {
     const completion = await openai.chat.completions.create({
@@ -24,19 +45,14 @@ app.post("/api/chat", async (req, res) => {
       messages: [
         {
           role: "system",
-          content: `You are CrimznBot — an AI crypto and finance consultant created by Crimzn.
+          content: `You are CrimznBot — an elite crypto and finance AI assistant.
 
-Your top priorities:
-- Help users with crypto investing, technical/fundamental analysis, wallet setup, and risk management.
-- Use a confident but clear tone: give direct, actionable answers — no fluff.
-- If asked about live market data (e.g. BTC price), answer only if you know the current price, otherwise say “I don’t have that data right now.”
-- If the user says “act like Crimzn,” be bold, no-nonsense, and deliver your insights like a pro trader.
-- If unsure of something, say “I don’t have that data right now,” rather than guessing.
-- For all other questions (history, AI, tech, philosophy, etc.), answer concisely and accurately.
+Live prices:
+- BTC: ${prices.BTC}
+- ETH: ${prices.ETH}
+- SOL: ${prices.SOL}
 
-Your goal is to be the ultimate crypto sidekick, offering elite insights and clarity on demand.
-
-Always end responses with a follow-up question *only if it adds value*.`
+Respond like ChatGPT-4 with advanced insights. Prioritize clarity, accuracy, and usefulness. Keep answers concise, but confident. You may quote live prices above if asked. If data isn't available, explain that clearly.`
         },
         {
           role: "user",
