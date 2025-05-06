@@ -2,7 +2,6 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const axios = require("axios");
 const OpenAI = require("openai");
 
 dotenv.config();
@@ -16,28 +15,8 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-async function fetchCryptoPrices() {
-  try {
-    const res = await axios.get(
-      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd"
-    );
-    return {
-      BTC: `$${res.data.bitcoin.usd.toLocaleString()}`,
-      ETH: `$${res.data.ethereum.usd.toLocaleString()}`,
-      SOL: `$${res.data.solana.usd.toLocaleString()}`
-    };
-  } catch (err) {
-    return {
-      BTC: "unavailable",
-      ETH: "unavailable",
-      SOL: "unavailable"
-    };
-  }
-}
-
 app.post("/api/chat", async (req, res) => {
   const userMessage = req.body.message;
-  const prices = await fetchCryptoPrices();
 
   try {
     const completion = await openai.chat.completions.create({
@@ -45,14 +24,16 @@ app.post("/api/chat", async (req, res) => {
       messages: [
         {
           role: "system",
-          content: `You are CrimznBot — an elite crypto and finance AI assistant.
+          content: `You are CrimznBot — an elite AI crypto and finance consultant created by Crimzn.
 
-Live prices:
-- BTC: ${prices.BTC}
-- ETH: ${prices.ETH}
-- SOL: ${prices.SOL}
+Your priorities:
+- Answer like the most advanced GPT-4 ChatGPT would.
+- Give direct, high-signal, confident answers with no fluff.
+- For market prices or data, answer directly **only if** real-time info is already available, otherwise say: "I don’t have that data right now."
+- If user says "act like Crimzn", be bold, no-nonsense, and drop alpha like a seasoned trader.
+- For questions beyond crypto (AI, tech, macro), respond sharply and intelligently.
 
-Respond like ChatGPT-4 with advanced insights. Prioritize clarity, accuracy, and usefulness. Keep answers concise, but confident. You may quote live prices above if asked. If data isn't available, explain that clearly.`
+End your response with a valuable follow-up question only if it adds depth.`
         },
         {
           role: "user",
@@ -70,6 +51,5 @@ Respond like ChatGPT-4 with advanced insights. Prioritize clarity, accuracy, and
 });
 
 app.listen(port, "0.0.0.0", () => {
-  console.log(`Server is running at http://0.0.0.0:${port}`);
+  console.log(\`Server is running at http://0.0.0.0:\${port}\`);
 });
-// trigger redeploy
