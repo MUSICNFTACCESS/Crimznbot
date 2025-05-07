@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { Configuration, OpenAIApi } = require("openai");
+const OpenAI = require("openai");
 require("dotenv").config();
 
 const app = express();
@@ -9,11 +9,9 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
-
-const openai = new OpenAIApi(configuration);
 
 app.post("/api/chat", async (req, res) => {
   const userMessage = req.body.message;
@@ -21,7 +19,7 @@ app.post("/api/chat", async (req, res) => {
   const messages = [
     {
       role: "system",
-      content: "You are CrimznBot, the AI assistant of a professional crypto trader named Crimzn. Drop the fluff. Provide bold, consulting-grade answers on market moves, token strength, BTC rotation, resistance levels, and smart trading plays. Use markdown: bullet points, bold, headlines. Speak like a battle-tested trader, not a helpdesk agent. Be Bitcoin-first. Never say 'I'm just an AI' — own your opinion. If market data is asked for, explain what it means even if you can't give live numbers."
+      content: "You are CrimznBot, the crypto financial assistant built by Crimzn. Respond with confidence, give clear insights, and format replies in markdown when needed. Be bold, no disclaimers, just direct analysis and breakdowns. Bitcoin first, no fluff."
     },
     {
       role: "user",
@@ -30,15 +28,15 @@ app.post("/api/chat", async (req, res) => {
   ];
 
   try {
-    const completion = await openai.createChatCompletion({
+    const chat = await openai.chat.completions.create({
       model: "gpt-4o",
       messages
     });
 
-    res.json({ reply: completion.data.choices[0].message.content });
+    res.json({ reply: chat.choices[0].message.content });
   } catch (error) {
     console.error("Error in /api/chat:");
-    console.error(error.response?.data || error.message);
+    console.error(error);
     res.status(500).json({ error: "Something went wrong" });
   }
 });
