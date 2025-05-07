@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const OpenAI = require("openai");
+const axios = require("axios");
 require("dotenv").config();
 
 const app = express();
@@ -16,14 +17,25 @@ const openai = new OpenAI({
 app.post("/api/chat", async (req, res) => {
   const userMessage = req.body.message;
 
+  let marketData = '';
+  try {
+    const { data } = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd');
+    const btc = data.bitcoin.usd;
+    const eth = data.ethereum.usd;
+    const sol = data.solana.usd;
+    marketData = `Live prices: BTC $${btc}, ETH $${eth}, SOL $${sol}. Use this data to guide your consulting-grade answer.`;
+  } catch (e) {
+    marketData = 'Live prices unavailable. Respond using your best trading judgment.';
+  }
+
   const messages = [
     {
       role: "system",
-      content: "You are CrimznBot, the crypto financial assistant built by Crimzn. Respond with confidence, give clear insights, and format replies in markdown when needed. Be bold, no disclaimers, just direct analysis and breakdowns. Bitcoin first, no fluff."
+      content: "You are CrimznBot, the crypto financial assistant of Crimzn. You give bold, real-time-aware answers with consulting insights, especially about BTC, SOL, and ETH. Always format using markdown. Be clear, direct, and Bitcoin-first. No fluff, no disclaimers."
     },
     {
       role: "user",
-      content: userMessage
+      content: `${marketData}\n\n${userMessage}`
     }
   ];
 
