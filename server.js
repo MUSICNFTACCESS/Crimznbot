@@ -1,57 +1,48 @@
 const express = require("express");
-const bodyParser = require("body-parser");
 const cors = require("cors");
-const dotenv = require("dotenv");
-const OpenAI = require("openai");
+const { Configuration, OpenAIApi } = require("openai");
+require("dotenv").config();
 
-dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+const openai = new OpenAIApi(configuration);
 
 app.post("/api/chat", async (req, res) => {
   const userMessage = req.body.message;
 
+  const messages = [
+    {
+      role: "system",
+      content: "You are CrimznBot, a crypto financial assistant created by Crimzn. You speak with clarity, confidence, and authority. You provide insights on market trends, trading strategies, wallet security, and consulting topics. When users ask about tokens, respond as if you're a real-time consultant. Use markdown formatting, bullet points, or headers if needed. Be direct, BTC-forward, and self-custody focused. Avoid hype. Stay sharp."
+    },
+    {
+      role: "user",
+      content: userMessage
+    }
+  ];
+
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: `You are CrimznBot — an AI crypto and finance consultant created by Crimzn.
-
-Your top priorities:
-- Help users with crypto investing, technical/fundamental analysis, wallet setup, and risk management.
-- Use a confident but clear tone: give direct, actionable answers — no fluff.
-- If asked about live market data (e.g., BTC/ETH/SOL prices), answer using your best available tools.
-- If the user says “act like Crimzn,” be bold, no-nonsense, and deliver your insights like a pro trader.
-- If unsure of something, say “I don’t have that data right now,” rather than guessing.
-- For all other topics (macro, AI, tech, philosophy), answer as clearly and accurately as possible.
-
-Your goal is to be the ultimate crypto sidekick, offering elite insights and clarity on demand.
-
-Always end responses with a follow-up question *only if it adds value*.`
-        },
-        {
-          role: "user",
-          content: userMessage
-        }
-      ]
+    const completion = await openai.createChatCompletion({
+      model: "gpt-4o",
+      messages
     });
 
-    const reply = completion.choices[0].message.content;
-    res.json({ reply });
+    res.json({ reply: completion.data.choices[0].message.content });
   } catch (error) {
-    console.error("Error in /api/chat:", error);
+    console.error("Error in /api/chat:");
+    console.error(error.response?.data || error.message);
     res.status(500).json({ error: "Something went wrong" });
   }
 });
 
 app.listen(port, "0.0.0.0", () => {
-  console.log("Server is running at http://0.0.0.0:" + port);
+  console.log(`Server is running at http://0.0.0.0:${port}`);
 });
-// redeploy trigger
