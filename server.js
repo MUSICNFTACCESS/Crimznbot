@@ -23,7 +23,7 @@ app.post("/api/chat", async (req, res) => {
     const btc = data.bitcoin.usd;
     const eth = data.ethereum.usd;
     const sol = data.solana.usd;
-    marketData = `Live prices: BTC $${btc}, ETH $${eth}, SOL $${sol}. Use this data to guide your consulting-grade answer.`;
+    marketData = `Live prices: BTC $${btc}, ETH $${eth}, SOL $${sol}.`;
   } catch (e) {
     marketData = 'Live prices unavailable. Respond using your best trading judgment.';
   }
@@ -31,11 +31,11 @@ app.post("/api/chat", async (req, res) => {
   const messages = [
     {
       role: "system",
-      content: "You are CrimznBot, the crypto financial assistant of Crimzn. You give bold, real-time-aware answers with consulting insights, especially about BTC, SOL, and ETH. Always format using markdown. Be clear, direct, and Bitcoin-first. No fluff, no disclaimers."
+      content: "You are CrimznBot, the crypto financial assistant of Crimzn. You give bold, real-time-aware answers with consulting insights. Always use the market data provided. Format in markdown. No disclaimers, no fluff. BTC first."
     },
     {
       role: "user",
-      content: `${marketData}\n\n${userMessage}`
+      content: `IMPORTANT: Use the following real-time crypto prices in your answer. DO NOT ignore them.\n\n${marketData}\n\nUser's question: ${userMessage}`
     }
   ];
 
