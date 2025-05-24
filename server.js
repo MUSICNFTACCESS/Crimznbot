@@ -1,58 +1,69 @@
 const express = require("express");
 const cors = require("cors");
-const OpenAI = require("openai");
-const axios = require("axios");
-require("dotenv").config();
+const bodyParser = require("body-parser");
+const { Configuration, OpenAIApi } = require("openai");
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+// Root route to fix "Cannot GET /"
+app.get("/", (req, res) => {
+  res.send("CrimznBot backend is live.");
 });
 
-app.post("/api/chat", async (req, res) => {
+// OpenAI config
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
+
+// Chat route
+app.post("/chat", async (req, res) => {
   const userMessage = req.body.message;
 
-  let marketData = '';
+  if (!userMessage) {
+    return res.status(400).json({ error: "Missing user message" });
+  }
+
+  let marketData = "";
+
   try {
-    const { data } = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd');
+    const priceRes = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd");
+    const data = await priceRes.json();
     const btc = data.bitcoin.usd;
     const eth = data.ethereum.usd;
     const sol = data.solana.usd;
     marketData = `Live prices: BTC $${btc}, ETH $${eth}, SOL $${sol}.`;
   } catch (e) {
-    marketData = 'Live prices unavailable. Respond using your best trading judgment.';
+    marketData = "Live prices unavailable. Respond using your best trading judgment.";
   }
 
-  const messages = [
-    {
-      role: "system",
-      content: "You are CrimznBot, the crypto financial assistant of Crimzn. You give bold, real-time-aware answers with consulting insights. Always use the market data provided. Format in markdown. No disclaimers, no fluff. BTC first."
-    },
-    {
-      role: "user",
-      content: `IMPORTANT: Use the following real-time crypto prices in your answer. DO NOT ignore them.\n\n${marketData}\n\nUser's question: ${userMessage}`
-    }
-  ];
-
   try {
-    const chat = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages
+    const completion = await openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: `You are CrimznBot, a professional crypto consultant. Respond in a calm, informative tone with deep knowledge of crypto markets, trends, portfolio strategy, DeFi, and on-chain tools. Be concise, thorough, and helpful. Avoid disclaimers. ${marketData}`,
+        },
+        {
+          role: "user",
+          content: userMessage,
+        },
+      ],
     });
 
-    res.json({ reply: chat.choices[0].message.content });
+    const reply = completion.data.choices[0].message.content;
+    res.json({ reply });
   } catch (error) {
-    console.error("Error in /api/chat:");
-    console.error(error);
-    res.status(500).json({ error: "Something went wrong" });
+    console.error("OpenAI error:", error);
+    res.status(500).json({ error: "Failed to get response from CrimznBot" });
   }
 });
 
-app.listen(port, "0.0.0.0", () => {
-  console.log(`Server is running at http://0.0.0.0:${port}`);
+app.listen(port, () => {
+  console.log(`CrimznBot backend running on port ${port}`);
 });
