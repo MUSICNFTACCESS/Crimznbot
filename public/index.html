@@ -1,36 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CryptoConsult by Crimzn</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <h1>CryptoConsult by Crimzn</h1>
+  <p id="prices">BTC: ... | ETH: ... | SOL: ...</p>
+  <p>Welcome to <strong>CryptoConsult</strong> – your personalized, AI-powered crypto guidance hub.</p>
 
-  <div id="prices">Loading live prices...</div>
-
-  <ul class="services">
-    <li>Onboarding & Crypto Basics</li>
-    <li>Wallet Setup & Security</li>
+  <h2>Available Services</h2>
+  <ul>
     <li>Technical & Fundamental Analysis</li>
-    <li>Crypto Tax Guidance</li>
-    <li>Risk Management & Strategy</li>
+    <li>Portfolio Strategy</li>
+    <li>Wallet Setup & Education</li>
+    <li>Crypto On-ramping / Off-ramping</li>
+    <li>Consultation Calls</li>
   </ul>
 
-  <div class="buttons">
-    <a href="https://commerce.coinbase.com/checkout/0193a8a5-c86f-407d-b5d7-6f89664fbdf8" target="_blank">Book via Coinbase</a>
-    <a href="https://paypal.me/crimzn" target="_blank">Pay with PayPal</a>
+  <h2>Talk to CrimznBot</h2>
+  <div id="chat-output" style="max-height:300px;overflow-y:auto;background:#111;padding:10px;border:1px solid #555;margin-bottom:10px;"></div>
+  <input id="user-input" placeholder="Ask me anything crypto..." />
+  <button onclick="askCrimznBot()">Send</button>
+  <p id="counter" style="color:#888;">Questions remaining: 3</p>
+
+  <div id="paywall" style="display:none;margin-top:15px;">
+    <p>You've used all 3 free questions. Unlock unlimited access below:</p>
+    <button onclick="window.open('https://commerce.coinbase.com/checkout/0193a8a5-c86f-407d-b5d7-6f89664fbdf8')">Pay $99.99 USDC</button>
+    <button onclick="window.open('https://commerce.coinbase.com/checkout/1d7cd946-d6ec-4278-b7ea-ee742b86982b')">Tip 1 USDC</button>
+    <button onclick="window.open('https://solana.com/pay?recipient=Co6bkf4NpatyTCbzjhoaTS63w93iK1DmzuooCSmHSAjF')">Pay with Solana</button>
+    <p>Need help? <a href="https://t.me/Crimznbot">Message me on Telegram</a></p>
   </div>
 
-  <div id="chatbox"></div>
-  <form id="chat-form">
-    <input type="text" placeholder="Ask CrimznBot about crypto..." required>
-    <button type="submit">Send</button>
-  </form>
+  <audio id="bg-music" autoplay loop>
+    <source src="autoplay.mp3" type="audio/mpeg" />
+  </audio>
 
-  <audio id="background-beat" src="philly2scranton.mp3"></audio>
   <script src="script.js"></script>
+  <script>
+    document.body.addEventListener('click', () => {
+      const audio = document.getElementById('bg-music');
+      if (audio && audio.paused) audio.play();
+    }, { once: true });
+
+    async function updatePrices() {
+      const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd');
+      const data = await res.json();
+      const btc = data.bitcoin.usd.toLocaleString();
+      const eth = data.ethereum.usd.toLocaleString();
+      const sol = data.solana.usd.toLocaleString();
+      document.getElementById('prices').textContent = `BTC: $${btc} | ETH: $${eth} | SOL: $${sol}`;
+    }
+    updatePrices();
+    setInterval(updatePrices, 60000);
+  </script>
 </body>
 </html>
