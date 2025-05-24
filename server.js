@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const { OpenAI } = require("openai");
+const { Configuration, OpenAIApi } = require("openai");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -10,9 +10,10 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // OpenAI config
-const openai = new OpenAI({
+const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
+const openai = new OpenAIApi(configuration);
 
 // Root route
 app.get("/", (req, res) => {
@@ -33,19 +34,18 @@ app.post("/chat", async (req, res) => {
     const btc = data.bitcoin.usd;
     const eth = data.ethereum.usd;
     const sol = data.solana.usd;
-
     marketData = `Live prices: BTC $${btc}, ETH $${eth}, SOL $${sol}.`;
   } catch (e) {
-    marketData = "Live prices unavailable. Respond using your best trading judgment.";
+    marketData = "Live prices unavailable. Respond using your best crypto judgment.";
   }
 
   try {
-    const completion = await openai.chat.completions.create({
+    const completion = await openai.createChatCompletion({
       model: "gpt-4",
       messages: [
         {
           role: "system",
-          content: `You are CrimznBot, a professional crypto consultant. ${marketData} Provide precise answers focused on consulting-grade insight.`,
+          content: `${marketData} You are CrimznBot, a sharp crypto strategist. Respond confidently using deep market knowledge. Never include generic disclaimers like 'As an AI...' or 'I can't predict prices'. Be decisive, helpful, and consultative.`,
         },
         {
           role: "user",
@@ -54,7 +54,7 @@ app.post("/chat", async (req, res) => {
       ],
     });
 
-    const reply = completion.choices[0].message.content;
+    const reply = completion.data.choices[0].message.content;
     res.json({ reply });
   } catch (error) {
     console.error("OpenAI error:", error);
