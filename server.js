@@ -14,7 +14,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-app.post("/api/chat", async (req, res) => {
+app.post("/chat", async (req, res) => {
   const userMessage = req.body.message;
 
   let marketData = '';
@@ -23,19 +23,23 @@ app.post("/api/chat", async (req, res) => {
     const btc = data.bitcoin.usd;
     const eth = data.ethereum.usd;
     const sol = data.solana.usd;
-    marketData = `Live prices: BTC $${btc}, ETH $${eth}, SOL $${sol}.`;
+    marketData = `Live prices as of now: BTC: $${btc}, ETH: $${eth}, SOL: $${sol}`;
   } catch (e) {
-    marketData = 'Live prices unavailable. Respond using your best trading judgment.';
+    marketData = 'Live prices are currently unavailable. Use your best estimation based on market conditions.';
   }
 
   const messages = [
     {
       role: "system",
-      content: "You are CrimznBot, the crypto financial assistant of Crimzn. You give bold, real-time-aware answers with consulting insights. Always use the market data provided. Format in markdown. No disclaimers, no fluff. BTC first."
+      content: "You are CrimznBot, a crypto financial strategist and assistant for CryptoConsult. You must always be concise, smart, and helpful. When provided, always reference real-time data."
     },
     {
       role: "user",
-      content: `IMPORTANT: Use the following real-time crypto prices in your answer. DO NOT ignore them.\n\n${marketData}\n\nUser's question: ${userMessage}`
+      content: `IMPORTANT: Use this price data in your response if relevant: ${marketData}`
+    },
+    {
+      role: "user",
+      content: userMessage
     }
   ];
 
@@ -47,7 +51,7 @@ app.post("/api/chat", async (req, res) => {
 
     res.json({ reply: chat.choices[0].message.content });
   } catch (error) {
-    console.error("Error in /api/chat:");
+    console.error("Error in /chat:");
     console.error(error);
     res.status(500).json({ error: "Something went wrong" });
   }
