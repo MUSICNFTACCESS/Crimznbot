@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
-const fetch = require("node-fetch");
 const bodyParser = require("body-parser");
+const fetch = require("node-fetch");
 const { OpenAI } = require("openai");
 
 const app = express();
@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-const openai = new OpenAI();
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 app.get("/", (req, res) => {
   res.send("CrimznBot backend is live.");
@@ -29,33 +29,35 @@ app.post("/api/chat", async (req, res) => {
     const btc = data.bitcoin.usd.toLocaleString();
     const eth = data.ethereum.usd.toLocaleString();
     const sol = data.solana.usd.toLocaleString();
-    marketData = `BTC: $${btc}, ETH: $${eth}, SOL: $${sol}`;
+    marketData = `Bitcoin: $${btc} | Ethereum: $${eth} | Solana: $${sol}`;
   } catch (e) {
-    console.error("Price fetch failed:", e);
+    marketData = "Live price fetch failed. Proceed with knowledge.";
   }
 
-  const systemPrompt = `
-${marketData}
-You are CrimznBot — a top-tier crypto strategist. You NEVER say things like "as an AI" or "I don't have real-time data." You DO have live prices and real market context. 
-Speak directly and confidently. You are a financial advisor in tone, but not legally — always helpful, decisive, and sharp like Crimzn himself.
-`;
+  const messages = [
+    {
+      role: "system",
+      content: `${marketData}\nYou are CrimznBot – a top-tier crypto strategist and consultant trained on market cycles, tokenomics, DeFi, and blockchain narratives. Avoid phrases like "as an AI" and answer with direct, confident insight.`,
+    },
+    {
+      role: "user",
+      content: userMessage,
+    },
+  ];
 
   try {
     const chat = await openai.chat.completions.create({
       model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userMessage },
-      ],
+      messages,
     });
 
     res.json({ reply: chat.choices[0].message.content });
   } catch (error) {
-    console.error("OpenAI error:", error);
-    res.status(500).json({ error: "Something went wrong" });
+    console.error("OpenAI Error:", error);
+    res.status(500).json({ error: "Failed to get response from CrimznBot" });
   }
 });
 
 app.listen(port, "0.0.0.0", () => {
-  console.log(`CrimznBot backend is live on port ${port}`);
+  console.log(`Server running on http://0.0.0.0:${port}`);
 });
