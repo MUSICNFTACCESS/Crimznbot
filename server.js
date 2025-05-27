@@ -1,8 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const fetch = require("node-fetch");
-const { OpenAI } = require("openai");
+const { Configuration, OpenAIApi } = require("openai");
+
+require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -10,54 +11,43 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
+
+app.post("/api/chat", async (req, res) => {
+  const { message } = req.body;
+  try {
+    const response = await openai.createChatCompletion({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: `
+You are CrimznBot, a professional crypto strategist and consultant speaking on behalf of Crimzn.
+
+Never say you're an AI. Never say you're a chatbot. Never disclaim like "as a language model..." or "I cannot provide financial advice."
+
+Speak clearly, confidently, and professionally — like a seasoned analyst explaining things to a client. Respond with real-time tone, market logic, and explain ideas as if you're Crimzn himself.
+          `.trim(),
+        },
+        { role: "user", content: message },
+      ],
+      temperature: 0.7,
+    });
+
+    res.json({ reply: response.data.choices[0].message.content });
+  } catch (err) {
+    console.error("OpenAI error:", err.response?.data || err.message);
+    res.status(500).json({ error: "Failed to get response from CrimznBot" });
+  }
+});
 
 app.get("/", (req, res) => {
   res.send("CrimznBot backend is live.");
 });
 
-app.post("/api/chat", async (req, res) => {
-  const userMessage = req.body.message;
-  if (!userMessage) {
-    return res.status(400).json({ error: "No message provided" });
-  }
-
-  let marketData = "Live crypto prices unavailable.";
-  try {
-    const response = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd");
-    const data = await response.json();
-    const btc = data.bitcoin.usd.toLocaleString();
-    const eth = data.ethereum.usd.toLocaleString();
-    const sol = data.solana.usd.toLocaleString();
-    marketData = `Bitcoin: $${btc} | Ethereum: $${eth} | Solana: $${sol}`;
-  } catch (e) {
-    marketData = "Live price fetch failed. Proceed with knowledge.";
-  }
-
-  const messages = [
-    {
-      role: "system",
-      content: `${marketData}\nYou are CrimznBot – a top-tier crypto strategist and consultant trained on market cycles, tokenomics, DeFi, and blockchain narratives. Avoid phrases like "as an AI" and answer with direct, confident insight.`,
-    },
-    {
-      role: "user",
-      content: userMessage,
-    },
-  ];
-
-  try {
-    const chat = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages,
-    });
-
-    res.json({ reply: chat.choices[0].message.content });
-  } catch (error) {
-    console.error("OpenAI Error:", error);
-    res.status(500).json({ error: "Failed to get response from CrimznBot" });
-  }
-});
-
-app.listen(port, "0.0.0.0", () => {
-  console.log(`Server running on http://0.0.0.0:${port}`);
+app.listen(port, () => {
+  console.log(`CrimznBot backend running on port ${port}`);
 });
