@@ -51,3 +51,4 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`CrimznBot backend running on port ${port}`);
 });
+ 
