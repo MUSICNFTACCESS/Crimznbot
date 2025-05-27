@@ -2,8 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 require("dotenv").config();
-
-const { OpenAI } = require("openai");
+const OpenAI = require("openai");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -12,7 +11,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 app.post("/api/chat", async (req, res) => {
@@ -23,7 +22,7 @@ app.post("/api/chat", async (req, res) => {
       messages: [
         {
           role: "system",
-          content: "You are CrimznBot, a professional crypto strategist and consultant. Never say you're an AI or a chatbot. Speak clearly and confidently like a seasoned expert.",
+          content: `You are CrimznBot, a professional crypto strategist. Never say you're an AI or chatbot. Speak like a confident human expert.`,
         },
         { role: "user", content: message },
       ],
