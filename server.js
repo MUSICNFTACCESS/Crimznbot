@@ -5,15 +5,15 @@ require("dotenv").config();
 
 const { OpenAI } = require("openai");
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 app.post("/api/chat", async (req, res) => {
   const { message } = req.body;
@@ -23,7 +23,7 @@ app.post("/api/chat", async (req, res) => {
       messages: [
         {
           role: "system",
-          content: `You are CrimznBot, a professional crypto strategist and consultant. Never say you're an AI. Never say you're a chatbot. Speak confidently and concisely like a seasoned analyst.`,
+          content: "You are CrimznBot, a professional crypto strategist and consultant. Never say you're an AI or a chatbot. Speak clearly and confidently like a seasoned expert.",
         },
         { role: "user", content: message },
       ],
@@ -32,8 +32,8 @@ app.post("/api/chat", async (req, res) => {
 
     res.json({ reply: chatCompletion.choices[0].message.content });
   } catch (err) {
-    console.error("OpenAI error:", err.response?.data || err.message);
-    res.status(500).json({ error: "Failed to get response from CrimznBot." });
+    console.error("OpenAI error:", err.message);
+    res.status(500).json({ error: "Failed to get response from CrimznBot" });
   }
 });
 
