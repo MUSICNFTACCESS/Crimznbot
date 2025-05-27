@@ -1,9 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const { Configuration, OpenAIApi } = require("openai");
-
 require("dotenv").config();
+
+const OpenAI = require("openai");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -11,15 +11,14 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 app.post("/api/chat", async (req, res) => {
   const { message } = req.body;
   try {
-    const response = await openai.createChatCompletion({
+    const chatCompletion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
         {
@@ -37,7 +36,7 @@ Speak clearly, confidently, and professionally — like a seasoned analyst expla
       temperature: 0.7,
     });
 
-    res.json({ reply: response.data.choices[0].message.content });
+    res.json({ reply: chatCompletion.choices[0].message.content });
   } catch (err) {
     console.error("OpenAI error:", err.response?.data || err.message);
     res.status(500).json({ error: "Failed to get response from CrimznBot" });
