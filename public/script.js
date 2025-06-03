@@ -1,36 +1,48 @@
 const input = document.getElementById("user-input");
 const chatOutput = document.getElementById("chat-output");
 
+let freeQuestionsLeft = 3;
+
+updateCounter();
+
 async function askCrimznBot() {
-  const message = input.value;
-  if (!message.trim()) return;
+  const message = input.value.trim();
+  if (!message || freeQuestionsLeft <= 0) return;
 
-  const userMessageEl = document.createElement("div");
-  userMessageEl.textContent = "You: " + message;
-  userMessageEl.style.color = "#ff9900";
-  chatOutput.appendChild(userMessageEl);
-
+  appendMessage("You", message);
   input.value = "";
 
   try {
-    const response = await fetch("/chat", {
+    const res = await fetch("https://crimznbot.onrender.com/chat", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message })
     });
 
-    const data = await response.json();
-    const botMessageEl = document.createElement("div");
-    botMessageEl.textContent = "CrimznBot: " + data.reply;
-    botMessageEl.style.color = "#00ff99";
-    chatOutput.appendChild(botMessageEl);
-    chatOutput.scrollTop = chatOutput.scrollHeight;
+    const data = await res.json();
+    appendMessage("CrimznBot", data.reply);
+    freeQuestionsLeft--;
+    updateCounter();
+
+    if (freeQuestionsLeft <= 0) {
+      input.disabled = true;
+      document.getElementById("paywall").style.display = "block";
+    }
   } catch (err) {
-    const errorEl = document.createElement("div");
-    errorEl.textContent = "Error: Unable to reach CrimznBot.";
-    errorEl.style.color = "red";
-    chatOutput.appendChild(errorEl);
+    appendMessage("CrimznBot", "Error: Failed to get response from backend.");
   }
+}
+
+function appendMessage(sender, message) {
+  const el = document.createElement("div");
+  el.innerHTML = `<strong>${sender}:</strong> ${message}`;
+  chatOutput.appendChild(el);
+  chatOutput.scrollTop = chatOutput.scrollHeight;
+}
+
+function updateCounter() {
+  const counter = document.getElementById("counter");
+  if (counter) counter.textContent = `Questions remaining: ${freeQuestionsLeft}`;
 }
