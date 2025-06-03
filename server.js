@@ -3,6 +3,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const fetch = require("node-fetch");
 const { OpenAI } = require("openai");
+require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -53,7 +54,7 @@ app.post("/chat", async (req, res) => {
     res.json({ reply });
   } catch (error) {
     console.error("OpenAI error:", error);
-    res.status(500).json({ error: "Failed to get response from CrimznBot." });
+    res.status(500).json({ error: "Failed to get response from CrimznBot" });
   }
 });
 
